@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["https://your-frontend-domain.com", "http://localhost:3000"]}})
+CORS(app)
 
 # Initialize Supabase client with service role key
 supabase: Client = create_client(
@@ -87,4 +87,5 @@ def get_overview():
     }
     return jsonify(overview), 200
 
-app = app
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
