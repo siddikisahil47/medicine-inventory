@@ -79,7 +79,7 @@ const Dashboard = ({ onLogout, username }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowInsertForm(true)}
-            className="flex items-center bg-green-500 hover:bg-green-600 text-white font-bold py-1.5 px-3 sm:py-2 sm:px-4 rounded-full shadow-lg transition duration-300 ease-in-out text-xs sm:text-sm"
+            className="flex items-center bg-green-500 hover:bg-green-600 text-white font-bold py-1.5 px-3 sm:py-2 sm:px-4 rounded-full shadow-lg transition duration-300 ease-in-out text-xs-custom sm:text-sm"
           >
             <PlusCircle className="mr-1 sm:mr-2 w-4 h-4 sm:w-5 sm:h-5" />
             <span>Add Medicine</span>
