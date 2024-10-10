@@ -8,6 +8,7 @@ const Header = ({ onLogout, username }) => {
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
+      localStorage.removeItem('user');
       onLogout();
       navigate('/login');
     }

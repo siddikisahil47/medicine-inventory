@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, User, Lock, LogIn } from 'lucide-react';
+import axios from 'axios';
+import { API_URL } from '../../config';
 
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -8,13 +10,21 @@ const Login = ({ onLogin }) => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (username === 'sahil' && password === 'sahil') {
-      onLogin(username); // Pass the username to the onLogin function
-      navigate('/dashboard');
-    } else {
-      setError('Invalid username or password');
+    try {
+      const response = await axios.post(`${API_URL}/api/login`, { username, password });
+      if (response.data.message === "Login successful") {
+        // Save credentials to localStorage
+        localStorage.setItem('user', JSON.stringify({ username, isLoggedIn: true }));
+        onLogin(username);
+        navigate('/dashboard');
+      } else {
+        setError('Invalid username or password');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An error occurred during login');
     }
   };
 

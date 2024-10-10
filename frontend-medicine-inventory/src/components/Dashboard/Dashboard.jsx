@@ -1,39 +1,61 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import Header from '../Layout/Header';
 import Overview from './Overview';
 import MedicineList from './MedicineList';
 import InsertMedicineForm from './InsertMedicineForm';
 import { PlusCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { API_URL } from '../../config';
 
 const Dashboard = ({ onLogout, username }) => {
   const [showInsertForm, setShowInsertForm] = useState(false);
-  const [medicines, setMedicines] = useState(() => {
-    const savedMedicines = localStorage.getItem('medicines');
-    return savedMedicines ? JSON.parse(savedMedicines) : [];
-  });
+  const [medicines, setMedicines] = useState([]);
   const [overviewData, setOverviewData] = useState({
     totalStock: 0,
     expiredMedicines: 0,
     reorderNeeded: 0,
   });
+  const [error, setError] = useState(null);
 
-  const updateOverviewData = useCallback(() => {
-    const totalStock = medicines.reduce((sum, med) => sum + parseInt(med.currentStock), 0);
-    const expiredMedicines = medicines.reduce((sum, med) => sum + parseInt(med.expiredMedicine), 0);
-    const reorderNeeded = medicines.filter(med => parseInt(med.medicineNeeded) > parseInt(med.currentStock)).length;
+  const fetchMedicines = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/medicines`);
+      setMedicines(response.data);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching medicines:', error);
+      setError('Failed to fetch medicines. Please try again later.');
+    }
+  }, []);
 
-    setOverviewData({ totalStock, expiredMedicines, reorderNeeded });
-  }, [medicines]);
+  const fetchOverviewData = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/overview`);
+      setOverviewData(response.data);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching overview data:', error);
+      setError('Failed to fetch overview data. Please try again later.');
+    }
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('medicines', JSON.stringify(medicines));
-    updateOverviewData();
-  }, [medicines, updateOverviewData]);
+    fetchMedicines();
+    fetchOverviewData();
+  }, [fetchMedicines, fetchOverviewData]);
 
-  const handleAddMedicine = (newMedicine) => {
-    setMedicines([...medicines, { ...newMedicine, id: Date.now() }]);
-    setShowInsertForm(false);
+  const handleAddMedicine = async (newMedicine) => {
+    try {
+      await axios.post(`${API_URL}/api/medicines`, newMedicine);
+      await fetchMedicines();
+      await fetchOverviewData();
+      setShowInsertForm(false);
+      setError(null);
+    } catch (error) {
+      console.error('Error adding/updating medicine:', error);
+      setError('Failed to add/update medicine. Please try again.');
+    }
   };
 
   return (
@@ -43,8 +65,14 @@ const Dashboard = ({ onLogout, username }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-8 "
+        className="container mx-auto px-4 py-8"
       >
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong className="font-bold">Error: </strong>
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
           <motion.button

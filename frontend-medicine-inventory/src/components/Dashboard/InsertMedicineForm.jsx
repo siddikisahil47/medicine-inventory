@@ -1,6 +1,31 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Package, Archive, AlertTriangle, Activity, Pill } from 'lucide-react';
+import { X, Plus, Pill, Package, Archive, AlertTriangle, Activity } from 'lucide-react';
+import { API_URL } from '../../config';
+
+const InputField = ({ icon, label, name, type = "text", value, onChange, readOnly = false }) => (
+  <div className="relative">
+    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor={name}>
+      {label}
+    </label>
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        {icon}
+      </div>
+      <input
+        type={type}
+        name={name}
+        id={name}
+        value={value}
+        onChange={onChange}
+        readOnly={readOnly}
+        className={`pl-10 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${readOnly ? 'bg-gray-100' : ''}`}
+        required={!readOnly}
+      />
+    </div>
+  </div>
+);
 
 const InsertMedicineForm = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -11,6 +36,7 @@ const InsertMedicineForm = ({ onClose, onSubmit }) => {
     medicineUsed: '',
     remainingStock: '',
   });
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const current = parseInt(formData.currentStock) || 0;
@@ -28,9 +54,19 @@ const InsertMedicineForm = ({ onClose, onSubmit }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    setError('');
+    try {
+      const response = await axios.post(`${API_URL}/api/medicines`, formData);
+      if (response.status === 200 || response.status === 201) {
+        onSubmit(response.data.medicine);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error adding/updating medicine:', error);
+      setError(error.response?.data?.error || 'An error occurred while adding/updating the medicine');
+    }
   };
 
   return (
@@ -55,6 +91,12 @@ const InsertMedicineForm = ({ onClose, onSubmit }) => {
           >
             <X size={24} />
           </button>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <strong className="font-bold">Error: </strong>
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <InputField
               icon={<Pill className="text-indigo-500" />}
@@ -129,28 +171,5 @@ const InsertMedicineForm = ({ onClose, onSubmit }) => {
     </AnimatePresence>
   );
 };
-
-const InputField = ({ icon, label, name, type = "text", value, onChange, readOnly = false }) => (
-  <div className="relative">
-    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor={name}>
-      {label}
-    </label>
-    <div className="relative">
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        {icon}
-      </div>
-      <input
-        type={type}
-        name={name}
-        id={name}
-        value={value}
-        onChange={onChange}
-        readOnly={readOnly}
-        className={`pl-10 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${readOnly ? 'bg-gray-100' : ''}`}
-        required={!readOnly}
-      />
-    </div>
-  </div>
-);
 
 export default InsertMedicineForm;
