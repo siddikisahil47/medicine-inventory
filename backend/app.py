@@ -15,6 +15,10 @@ supabase: Client = create_client(
     os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 )
 
+@app.route('/', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "message": "Backend is working!"}), 200
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
